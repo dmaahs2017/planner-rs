@@ -35,6 +35,10 @@ impl TestEnv {
             .arg("--planner-directory")
             .arg(self.dir.path().to_str().unwrap())
     }
+
+    fn command_with_planner(&mut self, planner: &str) -> &mut Command {
+        self.command().arg("--planner-name").arg(planner)
+    }
 }
 
 #[test]
@@ -69,7 +73,7 @@ fn show_paths() {
     let mut test_env = TestEnv::new();
     test_env
         .command()
-        .arg("--show-paths")
+        .arg("paths")
         .assert()
         .success()
         .stdout(contains(format!(
@@ -78,17 +82,30 @@ fn show_paths() {
         )));
 }
 
-// TODO: Delete planner test where planner is already deleted
+#[test]
+fn delete_planner_that_dne() {
+    let mut test_env = TestEnv::new();
+    test_env
+        .command()
+        .arg("delete")
+        .assert()
+        .failure()
+        .stderr(contains(format!(
+            "Planner: default_planner, does not exist",
+        )));
+}
+
 #[test]
 fn delete_planner() {
     let mut test_env = TestEnv::new();
-    let planner_path = test_env.dir.path().join("default_planner.pln");
+    let planner_path = test_env
+        .dir
+        .path()
+        .join("default_planner")
+        .with_extension("pln");
     test_env
         .command()
-        //.args(&["set", "test", "2020-01-01"])
-        .arg("set")
-        .arg("test")
-        .arg("2020-01-01")
+        .args(&["set", "test", "2020-01-01"])
         .assert()
         .success();
 
@@ -96,18 +113,56 @@ fn delete_planner() {
 
     test_env
         .command()
-        .arg("--delete-planner")
+        .arg("delete")
         .assert()
         .success()
-        .stdout(contains(format!(
-            "Deleted planner: {}",
-            planner_path
-                .with_extension("")
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-        )));
+        .stdout(contains("Deleted planner: default_planner"));
 
     assert!(!planner_path.is_file());
+}
+
+#[test]
+fn delete_specified_planner() {
+    let mut test_env = TestEnv::new();
+    let planner_path = test_env.dir.path().join("my-planner").with_extension("pln");
+    test_env
+        .command_with_planner("my-planner")
+        .args(&["set", "test", "2020-01-01"])
+        .assert()
+        .success();
+
+    assert!(planner_path.is_file());
+
+    test_env
+        .command()
+        .args(&["delete", "my-planner"])
+        .assert()
+        .success()
+        .stdout(contains("Deleted planner: my-planner"));
+
+    assert!(!planner_path.is_file());
+}
+
+#[test]
+fn list_planners() {
+    let mut test_env = TestEnv::new();
+    test_env
+        .command_with_planner("my-planner")
+        .args(&["set", "test", "2020-01-01"])
+        .assert()
+        .success();
+
+    test_env
+        .command_with_planner("my-planner-2")
+        .args(&["set", "test", "2020-01-01"])
+        .assert()
+        .success();
+
+    test_env
+        .command()
+        .args(&["list"])
+        .assert()
+        .success()
+        .stdout(contains("my-planner"))
+        .stdout(contains("my-planner-2"));
 }

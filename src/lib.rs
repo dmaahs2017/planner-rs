@@ -7,10 +7,13 @@ use chrono::NaiveDate;
 use ron::{de, ser};
 use serde::{Deserialize, Serialize};
 
+pub mod constants;
 mod ident;
-use ident::{IDGenerator, Id};
+pub mod opts;
+pub mod subcommand;
 
-pub const PLANNER_EXT: &'static str = "pln";
+use constants::*;
+use ident::{IDGenerator, Id};
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub enum Error {
@@ -109,7 +112,6 @@ impl Planner {
 mod tests {
     use super::*;
     use std::io::Write;
-    use tempfile::NamedTempFile;
 
     #[test]
     fn add_event_works() {
