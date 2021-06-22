@@ -78,6 +78,7 @@ fn show_paths() {
         )));
 }
 
+// TODO: Delete planner test where planner is already deleted
 #[test]
 fn delete_planner() {
     let mut test_env = TestEnv::new();

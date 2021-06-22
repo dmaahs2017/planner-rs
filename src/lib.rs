@@ -1,7 +1,6 @@
 #![feature(io_read_to_string)]
 
 use std::fs::File;
-use std::io::{self, Read, Write};
 use std::path::Path;
 
 use chrono::NaiveDate;

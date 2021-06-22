@@ -1,9 +1,7 @@
-use std::path::Path;
 use std::path::PathBuf;
 
 use app_dirs::{AppDataType, AppInfo};
 use clap::{AppSettings, Clap};
-use ron;
 
 use planner::*;
 
@@ -15,16 +13,17 @@ const APP_INFO: AppInfo = AppInfo {
 #[derive(Clap)]
 #[clap(version = "0.1", author = "Dalton J. M. <maahs2017@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
+#[clap(about = "A CLI planner. Fun :)")]
 struct Command {
-    #[clap(long)]
+    #[clap(long, about = "Specify the directory to your planners")]
     planner_directory: Option<String>,
 
-    #[clap(long, default_value = "default_planner")]
+    #[clap(long, default_value = "default_planner", about = "Specify the name of the planner you want to query")]
     planner_name: String,
 
-    #[clap(short, long)]
+    #[clap(short, long, about = "Show the directory where your planners is stored")]
     show_paths: bool,
-    #[clap(long)]
+    #[clap(long, about = "WARNING: This will permanently delete the planner")]
     delete_planner: bool,
 
     #[clap(subcommand)]
@@ -37,6 +36,7 @@ enum SubCommand {
 }
 
 #[derive(Clap)]
+#[clap(about = "Set a new event in your planner.\nUse `planner set --help` for more information")]
 struct SetCommand {
     #[clap(short, long)]
     verbose: bool,
