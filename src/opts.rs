@@ -76,7 +76,7 @@ pub struct SetOpts {
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
 #[clap(
-    about = "WARNDING: This will permanently delete the current planner\nDelete the planner\nUse `planner delete --help` for more information"
+    about = "WARNING: This will permanently delete the current planner\nDelete the planner\nUse `planner delete --help` for more information"
 )]
 pub struct DeleteOpts {
     #[clap(about = "Planner to delete")]
