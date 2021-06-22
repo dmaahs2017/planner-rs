@@ -56,6 +56,9 @@ pub enum SubCommand {
     #[clap(about = "Show existing planners")]
     #[clap(setting = AppSettings::ColoredHelp)]
     List,
+    #[clap(about = "View upcoming planner events")]
+    #[clap(setting = AppSettings::ColoredHelp)]
+    View,
 }
 
 #[derive(Clap)]

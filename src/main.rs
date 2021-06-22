@@ -10,6 +10,7 @@ fn main() {
             SubCommand::Delete(delete_opts) => subcommand::delete(&config, &delete_opts),
             SubCommand::Paths => subcommand::show(&config),
             SubCommand::List => subcommand::list(&config),
+            SubCommand::View => subcommand::view(&config),
         }
     }
 }
