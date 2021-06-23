@@ -138,7 +138,7 @@ fn delete_specified_planner() {
         .args(&["delete", "my-planner"])
         .assert()
         .success()
-        .stdout(similar("Deleted planner: my-planner"));
+        .stdout(similar("Deleted planner: my-planner\n"));
 
     assert!(!planner_path.is_file());
 }
