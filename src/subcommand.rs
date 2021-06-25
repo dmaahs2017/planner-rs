@@ -1,8 +1,10 @@
-use crate::{constants::*, opts::*, *};
-
-use chrono::offset::Local;
-
 use std::fs;
+
+use calendarize;
+use chrono::{offset::Local, Datelike};
+use comfy_table::Table;
+
+use crate::{constants::*, opts::*, *};
 
 pub fn set(config: &Config, set_opts: &SetOpts) {
     let mut planner = Planner::load(&config.dir, &config.name);
@@ -61,42 +63,82 @@ pub fn list(config: &Config) {
     }
 }
 
-pub fn view(config: &Config) {
+pub fn view(config: &Config, opts: &ViewOpts) {
     let planner = Planner::load(&config.dir, &config.name);
-
     let today = Local::today().naive_local();
 
-    let i =
-        planner.events.iter().enumerate().find_map(
-            |(i, e)| {
-                if e.date >= today {
-                    Some(i)
-                } else {
-                    None
-                }
-            },
-        );
-
-    //TODO: test for all past due
-    //TODO: test for all upcoming
-    let (past_due, upcoming) = if let Some(i) = i {
-        planner.events.split_at(i)
-    } else {
-        (&planner.events[..], &planner.events[planner.events.len()..])
-    };
-
-    if past_due.len() > 0 {
-        println!("Past Due:");
-        for e in past_due {
-            println!("\t{} - {}", e.name, e.date.format("%A, %-d %B, %C%y"));
+    if opts.list {
+        let mut past_due = planner.events.iter().filter(|e| e.date < today).peekable();
+        let mut upcoming = planner.events.iter().filter(|e| e.date >= today).peekable();
+        if past_due.peek().is_some() {
+            println!("Past Due:");
+            for e in past_due {
+                println!("\t{} - {}", e.name, e.date.format("%A, %-d %B, %C%y"));
+            }
+            println!();
         }
-        println!();
-    }
-    if upcoming.len() > 0 {
-        println!("Upcoming Dates:");
-        for e in upcoming {
-            println!("\t{} - {}", e.name, e.date.format("%A, %-d %B, %C%y"));
+        if upcoming.peek().is_some() {
+            println!("Upcoming Dates:");
+            for e in upcoming {
+                println!("\t{} - {}", e.name, e.date.format("%A, %-d %B, %C%y"));
+            }
+            println!();
         }
-        println!();
+        return;
     }
+
+    let events = planner
+        .events
+        .group_by(|a, b| a.date.month() == b.date.month());
+
+    for events in events {
+        let days = calendarize::calendarize(events[0].date);
+        let mut table = Table::new();
+        table.set_header(&[
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ]);
+
+        let events_of_the_month = days.iter().map(|week| {
+            week.iter()
+                .map(|&day| {
+                    if day == 0 {
+                        String::new()
+                    } else {
+                        let event_string = events
+                            .iter()
+                            .filter(|e| e.date.day() == day)
+                            .map(|e| e.name.clone())
+                            .reduce(|mut a, b| {
+                                a.push('\n');
+                                a.push_str(&b);
+                                a
+                            })
+                            .unwrap_or_default();
+                        format!("{}.\n{}", day, event_string)
+                    }
+                })
+                .collect::<Vec<_>>()
+        });
+
+        for week in events_of_the_month {
+            table.add_row(week);
+        }
+
+        println!("\n{}", events[0].date.format("%B, %C%y"));
+        println!("{}", table);
+    }
+}
+
+pub fn rm(config: &Config, opts: &RmOpts) {
+    let mut planner = Planner::load(&config.dir, &config.name);
+    let e = planner.events.iter().find(|e| e.id == opts.event_id).expect("Could not find event").clone();
+    planner.remove_event_by_id(opts.event_id).expect("Failed to remove event from planner");
+    println!("Removed event: {{id: {}, name: {}, date: {}}}", e.id, e.name, e.date);
+    planner.save(&config.dir, &config.name);
 }

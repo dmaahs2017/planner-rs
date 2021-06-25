@@ -1,4 +1,5 @@
 #![feature(io_read_to_string)]
+#![feature(slice_group_by)]
 
 use std::fs::File;
 use std::path::Path;
@@ -11,6 +12,7 @@ pub mod constants;
 mod ident;
 pub mod opts;
 pub mod subcommand;
+pub mod prompt;
 
 use constants::*;
 use ident::{IDGenerator, Id};
@@ -20,6 +22,7 @@ pub enum Error {
     EventNotFound,
     EventListEmpty,
     DateParseFailure,
+    DateOutOfRange,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd)]

@@ -29,6 +29,34 @@ impl TestEnv {
         }
     }
 
+    fn with_events_populated() -> Self {
+        let mut test_env = TestEnv::new();
+        test_env
+            .command()
+            .args(&["set", "test2", "2320-02-01"])
+            .assert()
+            .success();
+
+        test_env
+            .command()
+            .args(&["set", "test-1", "2000-12-01"])
+            .assert()
+            .success();
+
+        test_env
+            .command()
+            .args(&["set", "test1", "2320-01-01"])
+            .assert()
+            .success();
+
+        test_env
+            .command()
+            .args(&["set", "test3", "2320-03-01"])
+            .assert()
+            .success();
+        test_env
+    }
+
     fn command(&mut self) -> &mut Command {
         self.command = Command::cargo_bin("planner").expect("binary was not found");
         self.command
@@ -169,34 +197,9 @@ fn list_planners() {
 
 #[test]
 fn simple_list_events() {
-    let mut test_env = TestEnv::new();
-    test_env
+    TestEnv::with_events_populated()
         .command()
-        .args(&["set", "test2", "2320-02-01"])
-        .assert()
-        .success();
-
-    test_env
-        .command()
-        .args(&["set", "test-1", "2000-12-01"])
-        .assert()
-        .success();
-
-    test_env
-        .command()
-        .args(&["set", "test1", "2320-01-01"])
-        .assert()
-        .success();
-
-    test_env
-        .command()
-        .args(&["set", "test3", "2320-03-01"])
-        .assert()
-        .success();
-
-    test_env
-        .command()
-        .args(&["view"])
+        .args(&["view", "-l"])
         .assert()
         .success()
         .stdout(similar(format!(
@@ -206,4 +209,24 @@ fn simple_list_events() {
             "test2 - Sunday, 1 February, 2320\n",
             "test3 - Monday, 1 March, 2320\n",
         )));
+}
+
+#[test]
+fn test_view_grid_formatted() {
+    TestEnv::with_events_populated()
+        .command()
+        .args(&["view"])
+        .assert()
+        .success()
+        .stdout(similar(include_str!("expected_table_output.txt")));
+}
+
+#[test]
+fn test_remove_event() {
+    TestEnv::with_events_populated()
+        .command()
+        .args(&["rm", "1"])
+        .assert()
+        .success()
+        .stdout(similar("Removed event: {id: 1, name: test2, date: 2320-02-01}\n"));
 }

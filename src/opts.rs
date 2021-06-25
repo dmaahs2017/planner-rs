@@ -48,17 +48,32 @@ impl From<Opts> for Config {
 
 #[derive(Clap)]
 pub enum SubCommand {
+    View(ViewOpts),
     Set(SetOpts),
-    Delete(DeleteOpts),
     #[clap(about = "Show the directory where your planners is stored")]
     #[clap(setting = AppSettings::ColoredHelp)]
     Paths,
     #[clap(about = "Show existing planners")]
     #[clap(setting = AppSettings::ColoredHelp)]
     List,
-    #[clap(about = "View upcoming planner events")]
-    #[clap(setting = AppSettings::ColoredHelp)]
-    View,
+    Delete(DeleteOpts),
+    Rm(RmOpts),
+}
+
+#[derive(Clap)]
+#[clap(about = "Remove an event by id")]
+#[clap(setting = AppSettings::ColoredHelp)]
+pub struct RmOpts {
+    #[clap(about = "Id of event to remove")]
+    pub event_id: u64,
+}
+
+#[derive(Clap)]
+#[clap(about = "View upcoming planner events")]
+#[clap(setting = AppSettings::ColoredHelp)]
+pub struct ViewOpts {
+    #[clap(short, long, about = "Display events in simple list")]
+    pub list: bool,
 }
 
 #[derive(Clap)]
